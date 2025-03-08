@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Schedule Tracker</title>
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --primary-light: #6b8cbe;
+            --primary-dark: #345182;
+            --secondary: #5e9ca0;
+            --accent: #f9a826;
+            --text: #333333;
+            --background: #f5f7fa;
+            --card: #ffffff;
+            --success: #4CAF50;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 10px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px var(--shadow);
+        }
+
+        h1 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .date-display {
+            font-size: 1.1em;
+            font-weight: 400;
+        }
+
+        .progress-container {
+            margin: 15px 0;
+            background-color: #e0e0e0;
+            border-radius: 20px;
+            height: 10px;
+            width: 100%;
+            max-width: 600px;
+            margin: 15px auto;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 20px;
+            background: linear-gradient(90deg, var(--accent), var(--secondary));
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+
+        .schedule-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .time-block {
+            background-color: var(--card);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 8px var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .time-block:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px var(--shadow);
+        }
+
+        .time-block h2 {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            font-size: 1.3em;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .time-range {
+            font-size: 0.85em;
+            color: var(--primary-dark);
+            font-weight: 500;
+            margin-top: 3px;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .activity-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .custom-checkbox {
+            margin-right: 12px;
+            min-width: 22px;
+            position: relative;
+            top: 3px;
+        }
+
+        .custom-checkbox input {
+            display: none;
+        }
+
+        .checkmark {
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--primary);
+            border-radius: 5px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .custom-checkbox input:checked + .checkmark {
+            background-color: var(--success);
+            border-color: var(--success);
+        }
+
+        .custom-checkbox input:checked + .checkmark:after {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 3px;
+            width: 6px;
+            height: 12px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            transition: color 0.2s;
+            font-size: 0.95em;
+        }
+
+        .activity-description {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .reason {
+            font-style: italic;
+            font-size: 0.8em;
+            color: #777;
+            margin-top: 5px;
+            padding-left: 8px;
+            border-left: 2px solid var(--accent);
+        }
+
+        input:checked ~ .activity-content .activity-title,
+        input:checked ~ .activity-content .activity-description,
+        input:checked ~ .activity-content .reason {
+            color: #999;
+            text-decoration: line-through;
+            text-decoration-color: #bbb;
+            text-decoration-thickness: 1px;
+        }
+
+        .reset-button {
+            display: block;
+            width: 100%;
+            max-width: 300px;
+            margin: 25px auto;
+            padding: 12px 24px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .reset-button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .completed {
+            position: relative;
+        }
+
+        .completed::after {
+            content: '✓ Completed';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: var(--success);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: 0.75em;
+            font-weight: 500;
+        }
+
+        /* Collapsible sections for mobile */
+        .time-block-header {
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .time-block-content {
+            display: block;
+            max-height: 1000px;
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed .time-block-content {
+            max-height: 0;
+        }
+
+        .toggle-icon {
+            font-size: 1.3em;
+            transition: transform 0.3s ease;
+        }
+
+        .collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        /* Media queries for responsive design */
+        @media (min-width: 768px) {
+            body {
+                padding: 20px;
+            }
+
+            header {
+                padding: 20px;
+                margin-bottom: 30px;
+            }
+
+            h1 {
+                font-size: 2.2em;
+            }
+
+            .date-display {
+                font-size: 1.3em;
+            }
+
+            .schedule-container {
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+                gap: 20px;
+                margin-top: 20px;
+            }
+
+            .time-block {
+                padding: 20px;
+            }
+
+            .time-block h2 {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 1.4em;
+            }
+
+            .time-range {
+                margin-top: 0;
+            }
+
+            .activity-title {
+                font-size: 1em;
+            }
+
+            .activity-description {
+                font-size: 0.9em;
+            }
+
+            .reason {
+                font-size: 0.85em;
+                padding-left: 10px;
+            }
+
+            .toggle-icon {
+                display: none;
+            }
+        }
+
+        /* Tap-specific improvements for mobile */
+        @media (max-width: 767px) {
+            .activity-item {
+                padding: 8px 0;
+            }
+            
+            .custom-checkbox {
+                min-width: 24px;
+            }
+            
+            .checkmark {
+                width: 24px;
+                height: 24px;
+            }
+            
+            /* Larger touch area for mobile checkboxes */
+            .custom-checkbox::after {
+                content: '';
+                position: absolute;
+                top: -10px;
+                left: -10px;
+                right: -10px;
+                bottom: -10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>My Daily Schedule Tracker</h1>
+        <div class="date-display" id="currentDate">Loading date...</div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText">0% Complete</div>
+    </header>
+
+    <div class="schedule-container" id="scheduleContainer">
+        <!-- Morning Routine -->
+        <div class="time-block">
+            <div class="time-block-header" onclick="toggleSection(this.parentElement)">
+                <h2>Morning Routine <span class="time-range">5:30 AM - 9:00 AM</span></h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="time-block-content">
+                <div class="activity-item">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" data-section="morning" onchange="updateProgress()">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="activity-content">
+                        <div class="activity-title">5:30 AM - 6:00 AM: Wake Up & Hydrate</div>
+                        <div class="activity-description">Drink 16oz of water with lemon, 5-minute stretching</div>
+                        <div class="reason">Jumpstarts metabolism and activates your body</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" data-section="morning" onchange="updateProgress()">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="activity-content">
+                        <div class="activity-title">6:00 AM - 7:00 AM: Exercise</div>
+                        <div class="activity-description">30-45 minutes of exercise, cool down and shower</div>
+                        <div class="reason">Boosts endorphins and increases energy levels</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" data-section="morning" onchange="updateProgress()">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="activity-content">
+                        <div class="activity-title">7:00 AM - 8:00 AM: Breakfast & Mental Preparation</div>
+                        <div class="activity-description">Balanced breakfast, meal prep, meditation/journaling</div>
+                        <div class="reason">Provides sustained energy and reduces stress</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" data-section="morning" onchange="updateProgress()">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="activity-content">
+                        <div class="activity-title">8:00 AM - 9:00 AM: Learning & Skill Development</div>
+                        <div class="activity-description">Reading and online course/study time</div>
+                        <div class="reason">Capitalizes on peak cognitive function</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Work Day -->
+        <div class="time-block">
+            <div class="time-block-header" onclick="toggleSection(this.parentElement)">
+                <h2>Work Day <span class="time-range">9:00 AM - 4:00 PM</span></h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="time-block-content">
+                <div class="activity-item">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" data-section="work" onchange="updateProgress()">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="activity-content">
+                        <div class="activity-title">9:00 AM - 12:00 PM: Work (First Half)</div>
+                        <div class="activity-description">High-priority tasks, meetings, important projects</div>
+                        <div class="reason">Aligns with natural energy patterns</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" data-section="work" onchange="updateProgress()">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="activity-content">
+                        <div class="activity-title">12:00 PM - 1:00 PM: Lunch Break</div>
+                        <div class="activity-description">Nutritious lunch, short walk, review afternoon priorities</div>
+                        <div class="reason">Fuels afternoon productivity and regulates circadian rhythm</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" data-section="work" onchange="updateProgress()">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="activity-content">
+                        <div class="activity-title">1:00 PM - 4:00 PM: Work (Second Half)</div>
+                        <div class="activity-description">Important tasks, administrative work, planning</div>
+                        <div class="reason">Maintains productivity and prepares for tomorrow</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evening Growth & Recovery -->
+        <div class="time-block">
+            <div class="time-block-header" onclick="toggleSection(this.parentElement)">
+                <h2>Evening Growth <span class="time-range">4:00 PM - 8:00 PM</span></h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="time-block-content">
+                <div class="activity-item">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" data-section="evening" onchange="updateProgress()">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="activity-content">
+                        <div class="activity-title">4:00 PM - 4:45 PM: Job Search</div>
+                        <div class="activity-description">Applications, networking, updating profiles</div>
+                        <div class="reason">Ensures consistent career advancement progress</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" data-section="evening" onchange="updateProgress()">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="activity-content">
+                        <div class="activity-title">4:45 PM - 5:30 PM: Communication Skills Practice</div>
+                        <div class="activity-description">Toastmasters, language learning, writing practice</div>
+                        <div class="reason">Regular practice leads to significant improvement</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" data-section="evening" onchange="updateProgress()">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="activity-content">
+                        <div class="activity-title">5:30 PM - 6:30 PM: Dinner & Break</div>
+                        <div class="activity-description">Balanced dinner, relaxation/family time</div>
+                        <div class="reason">Supports recovery and improves sleep quality</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" data-section="evening" onchange="updateProgress()">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="activity-content">
+                        <div class="activity-title">6:30 PM - 8:00 PM: Social Time/Personal Interests</div>
+                        <div class="activity-description">Family interaction, hobbies, light physical activity</div>
+                        <div class="reason">Crucial for mental health and prevents burnout</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Night Routine -->
+        <div class="time-block">
+            <div class="time-block-header" onclick="toggleSection(this.parentElement)">
+                <h2>Night Routine <span class="time-range">8:00 PM - 10:30 PM</span></h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="time-block-content">
+                <div class="activity-item">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" data-section="night" onchange="updateProgress()">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="activity-content">
+                        <div class="activity-title">8:00 PM - 9:00 PM: Focused Study Time</div>
+                        <div class="activity-description">Study for career advancement</div>
+                        <div class="reason">Reinforces morning learning</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" data-section="night" onchange="updateProgress()">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="activity-content">
+                        <div class="activity-title">9:00 PM - 10:00 PM: Prepare for Tomorrow</div>
+                        <div class="activity-description">Clothes, meals, schedule review</div>
+                        <div class="reason">Minimizes decision fatigue for the following day</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" data-section="night" onchange="updateProgress()">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="activity-content">
+                        <div class="activity-title">10:00 PM - 10:30 PM: Wind-Down Routine</div>
+                        <div class="activity-description">Digital devices off, light reading, relaxation techniques</div>
+                        <div class="reason">Signals to your body that it's time for sleep</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" data-section="night" onchange="updateProgress()">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="activity-content">
+                        <div class="activity-title">10:30 PM - 5:30 AM: Sleep</div>
+                        <div class="activity-description">7 hours of quality sleep in cool, dark, quiet room</div>
+                        <div class="reason">Regulates circadian rhythm and ensures adequate rest</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="reset-button" id="resetButton">Reset All Activities</button>
+
+    <script>
+        // Display current date
+        function updateDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+        }
+        
+        // Toggle section collapse/expand
+        function toggleSection(element) {
+            element.classList.toggle('collapsed');
+        }
+        
+        // Update progress bar
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const total = checkboxes.length;
+            let checked = 0;
+            
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    checked++;
+                    
+                    // Add visual cue to parent time block if all activities in section are completed
+                    const section = checkbox.getAttribute('data-section');
+                    const sectionCheckboxes = document.querySelectorAll(`input[data-section="${section}"]`);
+                    const sectionChecked = Array.from(sectionCheckboxes).every(cb => cb.checked);
+                    
+                    if (sectionChecked) {
+                        // Find parent time-block and add completed class
+                        const timeBlock = checkbox.closest('.time-block');
+                        if (timeBlock && !timeBlock.classList.contains('completed')) {
+                            timeBlock.classList.add('completed');
+                        }
+                    } else {
+                        // Remove completed class if not all are checked
+                        const timeBlock = checkbox.closest('.time-block');
+                        if (timeBlock && timeBlock.classList.contains('completed')) {
+                            timeBlock.classList.remove('completed');
+                        }
+                    }
+                }
+            });
+            
+            const percentage = Math.round((checked / total) * 100);
+            
+            document.getElementById('progressBar').style.width = `${percentage}%`;
+            document.getElementById('progressText').textContent = `${percentage}% Complete`;
+            
+            // Save to local storage
+            saveProgress();
+        }
+        
+        // Save progress to local storage
+        function saveProgress() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const progress = {};
+            
+            checkboxes.forEach((checkbox, index) => {
+                progress[index] = checkbox.checked;
+            });
+            
+            localStorage.setItem('scheduleProgress', JSON.stringify(progress));
+            localStorage.setItem('scheduleDate', new Date().toDateString());
+        }
+        
+        // Load progress from local storage
+        function loadProgress() {
+            const savedProgress = localStorage.getItem('scheduleProgress');
+            const savedDate = localStorage.getItem('scheduleDate');
+            
+            // If it's a new day, reset progress
+            if (savedDate !== new Date().toDateString()) {
+                resetProgress();
+                return;
+            }
+            
+            if (savedProgress) {
+                const progress = JSON.parse(savedProgress);
+                const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                
+                checkboxes.forEach((checkbox, index) => {
+                    if (progress[index]) {
+                        checkbox.checked = true;
+                    }
+                });
+                
+                updateProgress();
+            }
+        }
+        
+        // Reset all progress
+        function resetProgress() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // Remove all completed classes
+            document.querySelectorAll('.completed').forEach(el => {
+                el.classList.remove('completed');
+            });
+            
+            updateProgress();
+            localStorage.removeItem('scheduleProgress');
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDate();
+            loadProgress();
+            
+            // Set up reset button
+            document.getElementById('resetButton').addEventListener('click', resetProgress);
+            
+            // Auto-expand current section based on time
+            autoExpandCurrentSection();
+        });
+        
+        // Auto-expand the relevant section based on current time
+        function autoExpandCurrentSection() {
+            const now = new Date();
+            const hour = now.getHours();
+            
+            let sectionToExpand = null;
+            
+            if (hour >= 5 && hour < 9) {
+                sectionToExpand = 'morning';
+            } else if (hour >= 9 && hour < 16) {
+                sectionToExpand = 'work';
+            } else if (hour >= 16 && hour < 20) {
+                sectionToExpand = 'evening';
+            } else {
+                sectionToExpand = 'night';
+            }
+            
+            // Collapse all sections first
+            document.querySelectorAll('.time-block').forEach(block => {
+                block.classList.add('collapsed');
+            });
+            
+            // Expand the relevant section
+            const relevantCheckbox = document.querySelector(`input[data-section="${sectionToExpand}"]`);
+            if (relevantCheckbox) {
+                const timeBlock = relevantCheckbox.closest('.time-block');
+                if (timeBlock) {
+                    timeBlock.classList.remove('collapsed');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
